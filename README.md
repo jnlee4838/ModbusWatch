@@ -13,10 +13,6 @@ Some functions (methods) have not been implemented. for an example, writing comm
 
 ![ModbusWatch log file](images/ModbusWatch_log.jpg)
 
-![ESP32 KSZ8863 SHT4x Assembled](images/ESP32_KSZ8863_SHT4x_Demo.jpg)
-
-![SHT40 Module](images/SHT4x_Module.jpg)
-
 ## Preparation
 
 * Python 3.xx.x
