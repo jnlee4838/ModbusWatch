@@ -583,7 +583,7 @@ QCheckBox::indicator:disabled, QRadioButton::indicator:disabled
             <number>1</number>
            </property>
            <property name="maximum">
-            <number>100</number>
+            <number>247</number>
            </property>
            <property name="value">
             <number>1</number>
@@ -816,7 +816,7 @@ QCheckBox::indicator:disabled, QRadioButton::indicator:disabled
             <string>000</string>
            </property>
            <property name="text">
-            <string>10</string>
+            <string>3</string>
            </property>
           </widget>
          </item>
@@ -1057,10 +1057,13 @@ QCheckBox::indicator:disabled, QRadioButton::indicator:disabled
             <number>0</number>
            </property>
            <property name="maximum">
-            <number>100</number>
+            <number>65535</number>
            </property>
            <property name="singleStep">
             <number>1</number>
+           </property>
+           <property name="stepType">
+            <enum>QAbstractSpinBox::StepType::DefaultStepType</enum>
            </property>
            <property name="value">
             <number>0</number>
@@ -1117,7 +1120,7 @@ QCheckBox::indicator:disabled, QRadioButton::indicator:disabled
             <number>1</number>
            </property>
            <property name="maximum">
-            <number>100</number>
+            <number>120</number>
            </property>
            <property name="value">
             <number>10</number>
@@ -1324,6 +1327,18 @@ QCheckBox::indicator:disabled, QRadioButton::indicator:disabled
         <layout class="QHBoxLayout" name="horizontalLayout_5">
          <item>
           <widget class="QComboBox" name="comboBox_datatype">
+           <property name="currentText">
+            <string>Uint16</string>
+           </property>
+           <property name="currentIndex">
+            <number>1</number>
+           </property>
+           <property name="maxVisibleItems">
+            <number>5</number>
+           </property>
+           <property name="maxCount">
+            <number>5</number>
+           </property>
            <item>
             <property name="text">
              <string>Int16</string>
@@ -1366,7 +1381,7 @@ QCheckBox::indicator:disabled, QRadioButton::indicator:disabled
           </widget>
          </item>
          <item>
-          <widget class="QLineEdit" name="lineEdit">
+          <widget class="QLineEdit" name="lineEdit_scale">
            <property name="maximumSize">
             <size>
              <width>240</width>
@@ -1374,7 +1389,10 @@ QCheckBox::indicator:disabled, QRadioButton::indicator:disabled
             </size>
            </property>
            <property name="text">
-            <string>0.01</string>
+            <string>1</string>
+           </property>
+           <property name="maxLength">
+            <number>6</number>
            </property>
           </widget>
          </item>
@@ -1408,7 +1426,7 @@ QCheckBox::indicator:disabled, QRadioButton::indicator:disabled
            <row/>
            <column>
             <property name="text">
-             <string>User Name</string>
+             <string>Address</string>
             </property>
            </column>
            <column>
@@ -1416,6 +1434,56 @@ QCheckBox::indicator:disabled, QRadioButton::indicator:disabled
              <string>Value</string>
             </property>
            </column>
+           <item row="0" column="1">
+            <property name="textAlignment">
+             <set>AlignCenter</set>
+            </property>
+           </item>
+           <item row="1" column="1">
+            <property name="textAlignment">
+             <set>AlignCenter</set>
+            </property>
+           </item>
+           <item row="2" column="1">
+            <property name="textAlignment">
+             <set>AlignCenter</set>
+            </property>
+           </item>
+           <item row="3" column="1">
+            <property name="textAlignment">
+             <set>AlignCenter</set>
+            </property>
+           </item>
+           <item row="4" column="1">
+            <property name="textAlignment">
+             <set>AlignCenter</set>
+            </property>
+           </item>
+           <item row="5" column="1">
+            <property name="textAlignment">
+             <set>AlignCenter</set>
+            </property>
+           </item>
+           <item row="6" column="1">
+            <property name="textAlignment">
+             <set>AlignCenter</set>
+            </property>
+           </item>
+           <item row="7" column="1">
+            <property name="textAlignment">
+             <set>AlignCenter</set>
+            </property>
+           </item>
+           <item row="8" column="1">
+            <property name="textAlignment">
+             <set>AlignCenter</set>
+            </property>
+           </item>
+           <item row="9" column="1">
+            <property name="textAlignment">
+             <set>AlignCenter</set>
+            </property>
+           </item>
           </widget>
          </item>
         </layout>

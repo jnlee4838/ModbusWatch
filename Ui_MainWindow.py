@@ -15,11 +15,11 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QApplication, QComboBox, QGridLayout, QGroupBox,
-    QHBoxLayout, QHeaderView, QLabel, QLayout,
-    QLineEdit, QMainWindow, QPushButton, QSizePolicy,
-    QSpacerItem, QSpinBox, QStatusBar, QTableWidget,
-    QTableWidgetItem, QWidget)
+from PySide6.QtWidgets import (QAbstractSpinBox, QApplication, QComboBox, QGridLayout,
+    QGroupBox, QHBoxLayout, QHeaderView, QLabel,
+    QLayout, QLineEdit, QMainWindow, QPushButton,
+    QSizePolicy, QSpacerItem, QSpinBox, QStatusBar,
+    QTableWidget, QTableWidgetItem, QWidget)
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -548,7 +548,7 @@ class Ui_MainWindow(object):
         self.spinBox_SlaveAddr.setSizePolicy(sizePolicy2)
         self.spinBox_SlaveAddr.setMaximumSize(QSize(80, 16777215))
         self.spinBox_SlaveAddr.setMinimum(1)
-        self.spinBox_SlaveAddr.setMaximum(100)
+        self.spinBox_SlaveAddr.setMaximum(247)
         self.spinBox_SlaveAddr.setValue(1)
         self.spinBox_SlaveAddr.setDisplayIntegerBase(10)
 
@@ -725,8 +725,9 @@ class Ui_MainWindow(object):
         self.spinBox_StartAddr.setSizePolicy(sizePolicy1)
         self.spinBox_StartAddr.setMaximumSize(QSize(80, 16777215))
         self.spinBox_StartAddr.setMinimum(0)
-        self.spinBox_StartAddr.setMaximum(100)
+        self.spinBox_StartAddr.setMaximum(65535)
         self.spinBox_StartAddr.setSingleStep(1)
+        self.spinBox_StartAddr.setStepType(QAbstractSpinBox.StepType.DefaultStepType)
         self.spinBox_StartAddr.setValue(0)
 
         self.hLayout_F_2.addWidget(self.spinBox_StartAddr, 0, Qt.AlignmentFlag.AlignLeft)
@@ -748,7 +749,7 @@ class Ui_MainWindow(object):
         self.spinBox_RegsNum.setObjectName(u"spinBox_RegsNum")
         self.spinBox_RegsNum.setMaximumSize(QSize(80, 16777215))
         self.spinBox_RegsNum.setMinimum(1)
-        self.spinBox_RegsNum.setMaximum(100)
+        self.spinBox_RegsNum.setMaximum(120)
         self.spinBox_RegsNum.setValue(10)
 
         self.hLayout_F_2.addWidget(self.spinBox_RegsNum, 0, Qt.AlignmentFlag.AlignLeft)
@@ -839,6 +840,8 @@ class Ui_MainWindow(object):
         self.comboBox_datatype.addItem("")
         self.comboBox_datatype.addItem("")
         self.comboBox_datatype.setObjectName(u"comboBox_datatype")
+        self.comboBox_datatype.setMaxVisibleItems(5)
+        self.comboBox_datatype.setMaxCount(5)
 
         self.horizontalLayout_5.addWidget(self.comboBox_datatype)
 
@@ -852,6 +855,7 @@ class Ui_MainWindow(object):
         self.lineEdit_scale = QLineEdit(self.groupBox_Data)
         self.lineEdit_scale.setObjectName(u"lineEdit_scale")
         self.lineEdit_scale.setMaximumSize(QSize(240, 16777215))
+        self.lineEdit_scale.setMaxLength(6)
 
         self.horizontalLayout_5.addWidget(self.lineEdit_scale)
 
@@ -870,6 +874,36 @@ class Ui_MainWindow(object):
         self.tableWidget.setHorizontalHeaderItem(1, __qtablewidgetitem1)
         if (self.tableWidget.rowCount() < 10):
             self.tableWidget.setRowCount(10)
+        __qtablewidgetitem2 = QTableWidgetItem()
+        __qtablewidgetitem2.setTextAlignment(Qt.AlignCenter);
+        self.tableWidget.setItem(0, 1, __qtablewidgetitem2)
+        __qtablewidgetitem3 = QTableWidgetItem()
+        __qtablewidgetitem3.setTextAlignment(Qt.AlignCenter);
+        self.tableWidget.setItem(1, 1, __qtablewidgetitem3)
+        __qtablewidgetitem4 = QTableWidgetItem()
+        __qtablewidgetitem4.setTextAlignment(Qt.AlignCenter);
+        self.tableWidget.setItem(2, 1, __qtablewidgetitem4)
+        __qtablewidgetitem5 = QTableWidgetItem()
+        __qtablewidgetitem5.setTextAlignment(Qt.AlignCenter);
+        self.tableWidget.setItem(3, 1, __qtablewidgetitem5)
+        __qtablewidgetitem6 = QTableWidgetItem()
+        __qtablewidgetitem6.setTextAlignment(Qt.AlignCenter);
+        self.tableWidget.setItem(4, 1, __qtablewidgetitem6)
+        __qtablewidgetitem7 = QTableWidgetItem()
+        __qtablewidgetitem7.setTextAlignment(Qt.AlignCenter);
+        self.tableWidget.setItem(5, 1, __qtablewidgetitem7)
+        __qtablewidgetitem8 = QTableWidgetItem()
+        __qtablewidgetitem8.setTextAlignment(Qt.AlignCenter);
+        self.tableWidget.setItem(6, 1, __qtablewidgetitem8)
+        __qtablewidgetitem9 = QTableWidgetItem()
+        __qtablewidgetitem9.setTextAlignment(Qt.AlignCenter);
+        self.tableWidget.setItem(7, 1, __qtablewidgetitem9)
+        __qtablewidgetitem10 = QTableWidgetItem()
+        __qtablewidgetitem10.setTextAlignment(Qt.AlignCenter);
+        self.tableWidget.setItem(8, 1, __qtablewidgetitem10)
+        __qtablewidgetitem11 = QTableWidgetItem()
+        __qtablewidgetitem11.setTextAlignment(Qt.AlignCenter);
+        self.tableWidget.setItem(9, 1, __qtablewidgetitem11)
         self.tableWidget.setObjectName(u"tableWidget")
 
         self.gridLayout_2.addWidget(self.tableWidget, 0, 0, 1, 1)
@@ -888,6 +922,7 @@ class Ui_MainWindow(object):
         self.retranslateUi(MainWindow)
 
         self.comboBox_Func.setCurrentIndex(2)
+        self.comboBox_datatype.setCurrentIndex(1)
 
 
         QMetaObject.connectSlotsByName(MainWindow)
@@ -908,7 +943,7 @@ class Ui_MainWindow(object):
         self.lineEdit_Ip3.setInputMask(QCoreApplication.translate("MainWindow", u"000", None))
         self.lineEdit_Ip3.setText(QCoreApplication.translate("MainWindow", u"0", None))
         self.lineEdit_Ip4.setInputMask(QCoreApplication.translate("MainWindow", u"000", None))
-        self.lineEdit_Ip4.setText(QCoreApplication.translate("MainWindow", u"10", None))
+        self.lineEdit_Ip4.setText(QCoreApplication.translate("MainWindow", u"3", None))
         self.label_Port.setText(QCoreApplication.translate("MainWindow", u"Port", None))
         self.groupBox_Request.setTitle(QCoreApplication.translate("MainWindow", u"Modbus Request Settings", None))
         self.label_Func.setText(QCoreApplication.translate("MainWindow", u"Func Code", None))
@@ -935,13 +970,19 @@ class Ui_MainWindow(object):
         self.comboBox_datatype.setItemText(3, QCoreApplication.translate("MainWindow", u"Uint32", None))
         self.comboBox_datatype.setItemText(4, QCoreApplication.translate("MainWindow", u"Float32", None))
 
+        self.comboBox_datatype.setCurrentText(QCoreApplication.translate("MainWindow", u"Uint16", None))
         self.comboBox_byteorder.setItemText(0, QCoreApplication.translate("MainWindow", u"Big-Endian", None))
         self.comboBox_byteorder.setItemText(1, QCoreApplication.translate("MainWindow", u"Little-Endian", None))
 
-        self.lineEdit_scale.setText(QCoreApplication.translate("MainWindow", u"0.01", None))
+        self.lineEdit_scale.setText(QCoreApplication.translate("MainWindow", u"1", None))
         ___qtablewidgetitem = self.tableWidget.horizontalHeaderItem(0)
-        ___qtablewidgetitem.setText(QCoreApplication.translate("MainWindow", u"User Name", None));
+        ___qtablewidgetitem.setText(QCoreApplication.translate("MainWindow", u"Address", None));
         ___qtablewidgetitem1 = self.tableWidget.horizontalHeaderItem(1)
         ___qtablewidgetitem1.setText(QCoreApplication.translate("MainWindow", u"Value", None));
+
+        __sortingEnabled = self.tableWidget.isSortingEnabled()
+        self.tableWidget.setSortingEnabled(False)
+        self.tableWidget.setSortingEnabled(__sortingEnabled)
+
     # retranslateUi
 

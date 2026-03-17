@@ -5,7 +5,9 @@ It's a simple GUI for Modbus TCP master (client) which is working on a PC. I hav
   
 I have decided to make a simple tool for Modbus TCP master with "QT for Python" and Pyside6 as well as pyModbus TCP library.
 
-Some functions (methods) have not been implemented. for an example, writing command linking with GUI from tableWidget and diplaying tableWidget on params etc. but, it works nice and gives you full log file as well. and also you can add the remain functions with ease.
+~~Some functions (methods) have not been implemented. for an example, writing command linking with GUI from tableWidget and diplaying tableWidget on params etc. but, it works nice and gives you full log file as well. and also you can add the remain functions with ease.~~
+
+As of Mar. 17, 2026: I have modified source and it working nice...but, I couldn't check everything. please let me know if any bugs or errors. I have tested it on Windows 11 on Python 3.12 as well as Pyside6. you can port it on different os with ease.
 
 ## Screenshots
 
@@ -15,7 +17,7 @@ Some functions (methods) have not been implemented. for an example, writing comm
 
 ## Preparation
 
-* Python 3.xx.x
+* Python 3.12.10
 
 * PyCharm or VS Code
 
@@ -45,13 +47,15 @@ the above command will make it a single executable file with icon. if you want t
 
    ![ModbusWatch SendButton](images/ModbusWatch_SendButton.jpg)
 
-3. The "Send Button" will be get alive in case that you set the "Scan Rate" to "0", which means you should click the "Send Button" to ask.
+3. The "Send Button" will be ~~get alive~~ activated in case that you set the "Scan Rate" to "0", which means you should click the "Send Button" to ~~ask~~ excute.
 
-4. you can change "byte-order", "byte-type" as well as "scale" (raw value *= scale)
+4. you can change "byte-order", "byte-type" as well as "scale" (raw value *= scale). the scale is working in the range 0 << xxx << 1.
 
-5. the tableWidget is not complete. you can add and modify at your end.
+5. ~~the tableWidget is not complete. you can add and modify at your end.~~ the tableWidget has been modified a lot. it's working on int32, uint32 as well as float32.
 
-6. the "Status Bar" will show necessary information such as "connection", "req_cnt/recv_cnt" ...
+6. the "Status Bar" will show necessary information such as "connection", "Host info", "req_cnt/recv_cnt".
+
+7. if you change some params once connected, it will be disconnected automatically.
 
 ## Related
 
