@@ -499,6 +499,8 @@ class MainWindow(QMainWindow):
 
         for i in range(0, settings.regs_num, step):
             val_item = self.ui.tableWidget.item(i, 1)
+            if val_item is None:
+                continue
             if settings.function_code == "Read Coils (0x01)" or settings.function_code == "Read Discrete Inputs (0x02)":
                 if val_item is not None:
                     if val_item.text() == '1':
@@ -511,7 +513,7 @@ class MainWindow(QMainWindow):
                         val_item.setText("1")
                     else:
                         val_item.setText("0")
-            self.ui.tableWidget.setItem(i, 1, val_item)
+            # self.ui.tableWidget.setItem(i, 1, val_item)
             # if is_32bit and (i + 1 < settings.regs_num):
             #     self.ui.tableWidget.setItem(i + 1, 0, QTableWidgetItem.setText(""))
             #     self.ui.tableWidget.setItem(i + 1, 1, QTableWidgetItem.setText(""))
