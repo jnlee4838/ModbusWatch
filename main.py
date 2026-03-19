@@ -3,11 +3,12 @@ import os
 import sys
 
 from datetime import *
+
 from pyModbusTCP.client import ModbusClient
 import struct
 
-from PySide6.QtCore import (Signal, QThread, QTimer, QMutex, QMutexLocker)
-from PySide6.QtWidgets import (QApplication, QDialog, QMainWindow, QTableWidgetItem)
+from PySide6.QtCore import (Qt, Signal, QThread, QTimer, QMutex, QMutexLocker)
+from PySide6.QtWidgets import (QApplication, QDialog, QMainWindow, QTableWidget, QTableWidgetItem)
 from PySide6.QtGui import (Qt, QIcon)
 
 import settings
@@ -26,13 +27,12 @@ try:
 except:
     pass
 
-VERSION = "0.1"
+VERSION = "0.2"
 
 # set global
 regs: list = []
 # init a thread lock
 regs_lock: QMutex = QMutex()
-
 
 # Thread to handle incoming & outgoing TCP data
 class Worker(QThread):
@@ -77,95 +77,113 @@ class Worker(QThread):
                 settings.data_cnt = 0
                 status = f"Connected"
                 self.error_signal.emit(status, settings.running)
-            else:
+                while settings.running:
+                    if settings.flag:
+                        settings.flag = 0
+                        # req sequence
+                        match settings.function_code:
+                            case "Read Coils (0x01)":
+                                reg_list = self.mbm.read_coils(bit_addr=settings.start_addr, bit_nb=settings.regs_num)
+                                if reg_list is None:
+                                    status = f"No response or invalid response"
+                                    self.error_signal.emit(status, settings.running)
+                            case "Read Holding Registers (0x03)":
+                                reg_list = self.mbm.read_holding_registers(reg_addr=settings.start_addr,
+                                                                           reg_nb=settings.regs_num)
+                                if reg_list is None:
+                                    status = f"No response or invalid response"
+                                    self.error_signal.emit(status, settings.running)
+                            case "Read Discrete Inputs (0x02)":
+                                reg_list = self.mbm.read_discrete_inputs(bit_addr=settings.start_addr,
+                                                                         bit_nb=settings.regs_num)
+                                if reg_list is None:
+                                    status = f"No response or invalid response"
+                                    self.error_signal.emit(status, settings.running)
+                            case "Read Input Registers (0x04)":
+                                reg_list = self.mbm.read_input_registers(reg_addr=settings.start_addr,
+                                                                         reg_nb=settings.regs_num)
+                                if reg_list is None:
+                                    status = f"No response or invalid response"
+                                    self.error_signal.emit(status, settings.running)
+                            case "Write Single Coil (0x05)":
+                                ret = self.mbm.write_single_coil(bit_addr=settings.start_addr, bit_value=regs[0])
+                                if ret:
+                                    reg_list = self.mbm.read_coils(bit_addr=settings.start_addr,
+                                                                   bit_nb=settings.regs_num)
+                                else:
+                                    status = f"No response or invalid response"
+                                    self.error_signal.emit(status, settings.running)
+                            case "Write Single Register (0x06)":
+                                ret = self.mbm.write_single_register(reg_addr=settings.start_addr, reg_value=regs[0])
+                                if ret:
+                                    reg_list = self.mbm.read_holding_registers(reg_addr=settings.start_addr,
+                                                                               reg_nb=settings.regs_num)
+                                else:
+                                    status = f"No response or invalid response"
+                                    self.error_signal.emit(status, settings.running)
+                            case "Write Multiple Coils (0x0F)":
+                                ret = self.mbm.write_multiple_coils(bits_addr=settings.start_addr, bits_value=regs)
+                                if ret:
+                                    reg_list = self.mbm.read_coils(bit_addr=settings.start_addr,
+                                                                   bit_nb=settings.regs_num)
+                                else:
+                                    status = f"No response or invalid response"
+                                    self.error_signal.emit(status, settings.running)
+                            case "Write Multiple Registers (0x10)":
+                                ret = self.mbm.write_multiple_registers(regs_addr=settings.start_addr, regs_value=regs)
+                                if ret:
+                                    reg_list = self.mbm.read_holding_registers(reg_addr=settings.start_addr,
+                                                                               reg_nb=settings.regs_num)
+                                else:
+                                    status = f"No response or invalid response"
+                                    self.error_signal.emit(status, settings.running)
+                        # recv sequence
+                        settings.req_cnt += 1
+                        try:
+                            if reg_list:
+                                with QMutexLocker(regs_lock):
+                                    regs = list(reg_list)
+                                    settings.data_cnt += 1
+                                    self.data_signal.emit(regs, settings.data_cnt)
+                            else:
+                                status = f'Data {reg_list}'
+                                self.error_signal.emit(status, settings.running)
+                        except Exception as e:
+                            # exception
+                            print(f"Status: {e}, {type(e)}")
+                            status = f'{e}, {type(e)}'
+                            self.error_signal.emit(status, settings.running)
+                    # take a rest
+                    self.msleep(25)
+            # end of while settings.running
+            else: # if not self.mbm.is_open
                 settings.running = False
-                status = f"Cannot connect"
-                self.error_signal.emit(status, settings.running)
-
-        except Exception as e:
-            settings.running = False
-            # exception
-            print(f"Status: {e}, {type(e)}")
-            status = f"{e}, {type(e)}"
-            self.error_signal.emit(status, settings.running)
-
-        while settings.running:
-            if settings.flag:
-                settings.flag -= 1
-
-                # req sequence
-                match settings.function_code:
-                    case "Read Coils (0x01)":
-                        reg_list = self.mbm.read_coils(bit_addr=settings.start_addr, bit_nb=settings.regs_num)
-                        if reg_list is None:
-                            status = f"No response or invalid response"
-                            self.error_signal.emit(status, settings.running)
-                    case "Read Holding Registers (0x03)":
-                        reg_list = self.mbm.read_holding_registers(reg_addr=settings.start_addr, reg_nb=settings.regs_num)
-                        if reg_list is None:
-                            status = f"No response or invalid response"
-                            self.error_signal.emit(status, settings.running)
-                    case "Read Discrete Inputs (0x02)":
-                        reg_list = self.mbm.read_discrete_inputs(bit_addr=settings.start_addr, bit_nb=settings.regs_num)
-                        if reg_list is None:
-                            status = f"No response or invalid response"
-                            self.error_signal.emit(status, settings.running)
-                    case "Read Input Registers (0x04)":
-                        reg_list = self.mbm.read_input_registers(reg_addr=settings.start_addr, reg_nb=settings.regs_num)
-                        if reg_list is None:
-                            status = f"No response or invalid response"
-                            self.error_signal.emit(status, settings.running)
-                    case "Write Single Coil (0x05)":
-                        ret = self.mbm.write_single_coil(bit_addr=settings.start_addr, bit_value=regs[0])
-                        if ret:
-                            reg_list = self.mbm.read_coils(bit_addr=settings.start_addr, bit_nb=settings.regs_num)
-                        else:
-                            status = f"No response or invalid response"
-                            self.error_signal.emit(status, settings.running)
-                    case "Write Single Register (0x06)":
-                        ret = self.mbm.write_single_register(reg_addr=settings.start_addr, reg_value=regs[0])
-                        if ret:
-                            reg_list = self.mbm.read_holding_registers(reg_addr=settings.start_addr, reg_nb=settings.regs_num)
-                        else:
-                            status = f"No response or invalid response"
-                            self.error_signal.emit(status, settings.running)
-                    case "Write Multiple Coils (0x0F)":
-                        ret = self.mbm.write_multiple_coils(bits_addr=settings.start_addr, bits_value=regs)
-                        if ret:
-                            reg_list = self.mbm.read_coils(bit_addr=settings.start_addr, bit_nb=settings.regs_num)
-                        else:
-                            status = f"No response or invalid response"
-                            self.error_signal.emit(status, settings.running)
-                    case "Write Multiple Registers (0x10)":
-                        ret = self.mbm.write_multiple_registers(regs_addr=settings.start_addr, regs_value=regs)
-                        if ret:
-                            reg_list = self.mbm.read_holding_registers(reg_addr=settings.start_addr, reg_nb=settings.regs_num)
-                        else:
-                            status = f"No response or invalid response"
-                            self.error_signal.emit(status, settings.running)
-
-                # recv sequence
-                settings.req_cnt += 1
-                print(f"Thread reg_list: {reg_list}")
-                try:
-                    if reg_list:
-                        with QMutexLocker(regs_lock):
-                            regs = list(reg_list)
-                            settings.data_cnt += 1
-                            self.data_signal.emit(regs, settings.data_cnt)
-                    else:
-                        status = f'Data {reg_list}'
+                settings.flag = 0
+                if hasattr(self, 'mbm') and self.mbm:
+                    try:
+                        self.msleep(10)
+                        self.mbm.close()
+                        self.mbm = None
+                        ret = "Still Alive" if self.mbm else "Dead"
+                        print(f"{datetime.now().strftime('%H:%M:%S.%f')[:-3]}: else > self.mbm --> {ret}")
+                    except Exception as e:
+                        print(f"not self.mbm.is_open: {e}")
+                        status = f"not self.mbm.is_open: {e}"
                         self.error_signal.emit(status, settings.running)
-
+        finally:
+            settings.running = False
+            settings.flag = 0
+            if hasattr(self, 'mbm') and self.mbm:
+                try:
+                    self.msleep(10)
+                    self.mbm.close()
+                    self.mbm = None
+                    ret = "Still Alive" if self.mbm else "Dead"
+                    print(f"{datetime.now().strftime('%H:%M:%S.%f')[:-3]}: finally > self.mbm --> {ret}")
                 except Exception as e:
-                    # settings.running = False # no need to stop thread for data error, just report error and keep going
-                    # exception
-                    print(f"Status: {e}, {type(e)}")
-                    status = f'{e}, {type(e)}'
+                    print(f"finally: {e}")
+                    status = f"finally: {e}"
                     self.error_signal.emit(status, settings.running)
-
-            # take a rest
-            QThread.msleep(25)
 
 
 # Help Window
@@ -211,6 +229,7 @@ class MainWindow(QMainWindow):
         self.ui.setupUi(self)
         if not os.path.isdir('log'):
             os.mkdir('log')
+        self.worker_thread = None
         self.file = None
         self.dlg_help = None
         self.dlg_about = None
@@ -225,14 +244,7 @@ class MainWindow(QMainWindow):
         self.timeout = settings.timeout
         self.start_addr = settings.start_addr
         self.regs_num = settings.regs_num
-        # QThread Creation
-        self.worker_thread = Worker()
-        # data to send to thread from MainWindow
-        self.request_signal.connect(self.worker_thread.request_handler)
-        # data to receive from thread to MainWindow
-        self.worker_thread.error_signal.connect(self.error_occurred)
-        self.worker_thread.data_signal.connect(self.data_handler)
-        # self.worker_thread.start()
+
         # Polling Timer Creation
         self.p_timer = QTimer()
         self.p_timer.setInterval(self.scan_rate)
@@ -261,6 +273,7 @@ class MainWindow(QMainWindow):
         self.ui.comboBox_datatype.currentTextChanged.connect(self.datatype_changed)
         self.ui.comboBox_byteorder.currentTextChanged.connect(self.byteorder_changed)
         self.ui.lineEdit_scale.textChanged.connect(self.scale_changed)
+        self.ui.tableWidget.cellClicked.connect(self.upate_table_contents)
         # Disable in case scan rate is not 0
         self.ui.pushButton_Send.setDisabled(True)
         self.setWindowTitle('ModbusWatch ' + VERSION)
@@ -286,6 +299,18 @@ class MainWindow(QMainWindow):
                 self.ui.statusbar.showMessage(alert)
                 return
             try:
+                if self.worker_thread:
+                    self.worker_thread.exit()
+                    self.worker_thread.wait()
+                    self.worker_thread = None
+                # QThread Creation
+                self.worker_thread = Worker()
+                # data to send to thread from MainWindow
+                self.request_signal.connect(self.worker_thread.request_handler)
+                # data to receive from thread to MainWindow
+                self.worker_thread.error_signal.connect(self.error_occurred)
+                self.worker_thread.data_signal.connect(self.data_handler)
+                # self.worker_thread.start
                 self.worker_thread.start()
                 self.ui.pushButton_Connect.setText('Disconnect')
                 self.setWindowTitle(self.host + ' - ' + 'ModbusWatch ' + VERSION)
@@ -307,18 +332,21 @@ class MainWindow(QMainWindow):
                     self.p_timer.start()
             except Exception as e:
                 settings.running = False
-                self.worker_thread.exit()
+                settings.flag = 0
                 self.status = f"{e}"
                 alert = f"Status: {self.status} | Host: {self.host}:{self.port} | Req / Recv: {self.req_num} / {self.recv_num}"
                 self.ui.statusbar.showMessage(alert)
 
         else:  # Disconnect
-            if settings.running:
-                settings.running = False
-                if self.worker_thread:
-                    self.worker_thread.exit()
-                    self.worker_thread.wait()
-                    # self.worker_thread = None
+            # if settings.running:
+            settings.running = False
+            settings.flag = 0
+            if self.worker_thread:
+                self.worker_thread.exit()
+                self.worker_thread.wait()
+                self.worker_thread = None
+            # ret = f"Still Alive" if self.worker_thread else "Dead"
+            # print(f"{datetime.now().strftime('%H:%M:%S.%f')[:-3]}: Disconnect worker_thread: {ret}")
             self.ui.pushButton_Connect.setText('Connect')
             self.setWindowTitle('ModbusWatch ' + VERSION)
             self.status = "Disconnected"
@@ -326,6 +354,7 @@ class MainWindow(QMainWindow):
             self.ui.statusbar.showMessage(alert)
             try:
                 if settings.appstart:
+                    settings.appstart = False
                     if self.p_timer.isActive():
                         self.p_timer.stop()
                         self.p_timer_cnt = 0
@@ -334,6 +363,7 @@ class MainWindow(QMainWindow):
                     self.file.flush()
                     if not self.file.closed:
                         QTimer.singleShot(100, self.file.close)  # wait for any pending write
+                # print(f"settings.running: {settings.running}, appstart: {settings.appstart}")
             except Exception as e:
                 self.status = f"{e}"
                 alert = f"Status: {self.status} | Host: {self.host}:{self.port} | Req / Recv: {self.req_num} / {self.recv_num}"
@@ -373,12 +403,12 @@ class MainWindow(QMainWindow):
 
     def scan_rate_changed(self):
         settings.scan_rate = self.ui.spinBox_ScanRate.value()
+        is_writebit = any(code in settings.function_code for code in ["Write"])
+        settings.scan_rate = 0 if is_writebit else settings.scan_rate
         self.scan_rate = settings.scan_rate
         print(f'settings.scan_rate: {settings.scan_rate}')
-        if settings.scan_rate == 0:
-            self.ui.pushButton_Send.setEnabled(True)
-        else:
-            self.ui.pushButton_Send.setEnabled(False)
+        self.ui.spinBox_ScanRate.setValue(settings.scan_rate)
+        self.ui.pushButton_Send.setEnabled(True) if settings.scan_rate == 0 else self.ui.pushButton_Send.setEnabled(False)
         if self.scan_rate != 0:
             self.p_timer.setInterval(self.scan_rate)
             self.p_timer.start()
@@ -389,12 +419,7 @@ class MainWindow(QMainWindow):
         print(f"req.num: {self.req_num}, settings.running: {settings.running}")
         if settings.running:
             self.req_num += 1
-            if settings.data_type == "Float32" or \
-                settings.data_type == "Int32" or \
-                settings.data_type == "Uint32":
-                is_32bit = True
-            else:
-                is_32bit = False
+            is_32bit = any(code in settings.function_code for code in ["Float32", "Int32", "Uint32"])
             step = 2 if is_32bit else 1
 
             if "Write" in settings.function_code:
@@ -412,7 +437,7 @@ class MainWindow(QMainWindow):
                         fmt = self.endian_map[settings.byte_order] + fmt_type
                         packed_val = struct.pack(fmt, val)
 
-                        # 4. hadling depending on buts (unpack & regs added)
+                        # handling depending on bits (unpack & regs added)
                         if is_32bit:
                             # 32bits --> 16bits x 2 ('HH') split
                             reg1, reg2 = struct.unpack(self.endian_map[settings.byte_order] + 'HH', packed_val)
@@ -428,8 +453,8 @@ class MainWindow(QMainWindow):
                             regs.extend([0, 0])
                         else:
                             regs.append(0)
-            print(f"pushButton_send: {regs}")
-            # flag is 1 for manual send, reg values are not needed for read function but for write function, it should be sent to thread to execute write command
+                print(f"pushButton_send: {regs}")
+            # flag is 1
             self.request_signal.emit(1, self.req_num)
     
     # Fourth block
@@ -468,6 +493,29 @@ class MainWindow(QMainWindow):
         settings.scale = float(self.ui.lineEdit_scale.text())
         print(f'settings.scale: {settings.scale}')
 
+    def upate_table_contents(self, r_list):
+        is_32bit = any(code in settings.function_code for code in ["Float32", "Int32", "Uint32"])
+        step = 2 if is_32bit else 1
+
+        for i in range(0, settings.regs_num, step):
+            val_item = self.ui.tableWidget.item(i, 1)
+            if settings.function_code == "Read Coils (0x01)" or settings.function_code == "Read Discrete Inputs (0x02)":
+                if val_item is not None:
+                    if val_item.text() == '1':
+                        val_item.setCheckState(Qt.CheckState.Checked)
+                    else:
+                        val_item.setCheckState(Qt.CheckState.Unchecked)
+            if settings.function_code == "Write Single Coil (0x05)" or settings.function_code == "Write Multiple Coils (0x0F)":
+                if val_item is not None:
+                    if val_item.checkState() == Qt.CheckState.Checked:
+                        val_item.setText("1")
+                    else:
+                        val_item.setText("0")
+            self.ui.tableWidget.setItem(i, 1, val_item)
+            # if is_32bit and (i + 1 < settings.regs_num):
+            #     self.ui.tableWidget.setItem(i + 1, 0, QTableWidgetItem.setText(""))
+            #     self.ui.tableWidget.setItem(i + 1, 1, QTableWidgetItem.setText(""))
+
     def update_table_ui(self):
         settings.function_code = self.ui.comboBox_Func.currentText()
         settings.regs_num = self.ui.spinBox_RegsNum.value()
@@ -479,7 +527,7 @@ class MainWindow(QMainWindow):
             case "Read Coils (0x01)":
                 settings.data_type = "Uint16"
             case "Read Holding Registers (0x03)":
-                if "Float32" in settings.data_type or "Int32" in settings.data_type or "Uint32" in settings.data_type:
+                 if "Float32" in settings.data_type or "Int32" in settings.data_type or "Uint32" in settings.data_type:
                     settings.regs_num = (settings.regs_num + 1) // 2 * 2  # force to add one more regs_num
             case "Read Discrete Inputs (0x02)":
                 settings.data_type = "Uint16"
@@ -515,6 +563,7 @@ class MainWindow(QMainWindow):
                 print(f'settings.scan_rate: {settings.scan_rate}')
                 self.ui.pushButton_Send.setEnabled(True)
                 settings.data_type = "Uint16"
+                # settings.regs_num = 2 if settings.regs_num < 2 else settings.regs_num
             case "Write Multiple Registers (0x10)":
                 if self.p_timer.isActive():
                     self.p_timer.stop()
@@ -523,6 +572,7 @@ class MainWindow(QMainWindow):
                 self.scan_rate = settings.scan_rate
                 print(f'settings.scan_rate: {settings.scan_rate}')
                 self.ui.pushButton_Send.setEnabled(True)
+                # settings.regs_num = 2 if settings.regs_num < 2 else settings.regs_num
                 if "Float32" in settings.data_type or "Int32" in settings.data_type or "Uint32" in settings.data_type:
                     settings.regs_num = (settings.regs_num + 1) // 2 * 2  # force to add one more regs_num
         # let's make a UI
@@ -531,35 +581,31 @@ class MainWindow(QMainWindow):
         self.ui.spinBox_RegsNum.setValue(self.regs_num)
         self.ui.tableWidget.setRowCount(self.regs_num)
         self.ui.comboBox_datatype.setCurrentText(settings.data_type)
-        # 32비트 데이터(Float/Int32)인 경우 2행씩 합침
-
-        if settings.data_type == "Float32" or \
-            settings.data_type == "Int32" or\
-            settings.data_type ==  "Uint32":
-            is_32bit = True
-        else:
-            is_32bit = False
+        is_32bit = any(code in settings.data_type for code in ["Float32", "Int32", "Uint32"])
         step = 2 if is_32bit else 1
 
         for i in range(0, settings.regs_num, step):
             # 1. add address in tableWidget
             addr_text = str(settings.start_addr + i)
             if is_32bit and (i + 1 < settings.regs_num):
-                addr_text += f"---{settings.start_addr + i + 1}"
+                addr_text += f"--{settings.start_addr + i + 1}"
                 # make cell creation
                 self.ui.tableWidget.setSpan(i, 1, 2, 1) # Value
                 self.ui.tableWidget.setSpan(i, 0, 2, 1) # Address
 
             addr_item = QTableWidgetItem(addr_text)
-            addr_item.setFlags(addr_item.flags() | Qt.ItemIsUserCheckable)
-            # addr_item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsUserCheckable)
             self.ui.tableWidget.setItem(i, 0, addr_item)
 
             # 2. default value
             val_item = QTableWidgetItem("0.0" if "Float32" in settings.data_type else "0")
-            val_item.setTextAlignment(Qt.AlignCenter)
+            val_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+            if settings.function_code == "Read Coils (0x01)" or settings.function_code == "Read Discrete Inputs (0x02)":
+                val_item.setFlags(Qt.ItemFlag.ItemIsEnabled)
+                val_item.setCheckState(Qt.CheckState.Unchecked)
+            if settings.function_code == "Write Single Coil (0x05)" or settings.function_code == "Write Multiple Coils (0x0F)":
+                val_item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemIsUserCheckable)
+                val_item.setCheckState(Qt.CheckState.Unchecked)
             self.ui.tableWidget.setItem(i, 1, val_item)
-
             # make it empty to prevent an error
             if is_32bit and (i + 1 < settings.regs_num):
                 self.ui.tableWidget.setItem(i + 1, 0, QTableWidgetItem(""))
@@ -571,33 +617,41 @@ class MainWindow(QMainWindow):
         parsed_results = []
         self.ui.tableWidget.setRowCount(self.regs_num)
         print(f'step: {step}, fmt_char: {fmt_char}')
+
+        is_bit_type = any(code in settings.function_code for code in ["0x01", "0x02", "0x05", "0x0F"])
         # split list per predefined step(1 or 2)
         for i in range(0, len(reg_list), step):
             block = reg_list[i: i + step]
             if len(block) < step: break  # stop if remain regs short
-
             # 1. convert to byte from 16 bits
             raw_bytes = struct.pack(f"{endian}{'H' * step}", *block)
-
-            # 2. Unpack
             final_val = struct.unpack(f"{endian}{fmt_char}", raw_bytes)[0]
-
-            # 3. apply scaling if any in Rx only case (not for Write)
-            if "Registers" in settings.function_code:
-                if 0 < settings.scale < 1:
-                    final_val *= settings.scale
-                    final_val = round(final_val, 4)
-            print(f'setting.scale: {settings.scale}, final_val: {final_val}')
+            # 2. apply scaling if any in Rx only case (not for Write)
+            if "Registers" in settings.function_code and 0 < settings.scale < 1:
+                final_val = round(final_val * settings.scale, 4)
+            print(f'parse>final_val: {final_val}')
             # row_idx = i // step
-            self.ui.tableWidget.setItem(i, 1, QTableWidgetItem(str(final_val)))
-            parsed_results.append(final_val)
+            # display_text = "" if is_bit_type else str(final_val)
+            display_text = str(final_val)
+            val_item = QTableWidgetItem(display_text)
+            val_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
 
+            if is_bit_type:
+                # val_item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsUserCheckable)
+                val_item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsUserCheckable)
+                state = Qt.CheckState.Checked if final_val == 1 else Qt.CheckState.Unchecked
+                val_item.setCheckState(state)
+
+            # 4. make an UI
+            self.ui.tableWidget.setItem(i, 1, val_item)
+            parsed_results.append(final_val)
         return parsed_results
 
     def data_handler(self, data, cnt):
         self.recv_num = cnt
         print(f"data_handler: {data}, {cnt}")
         data_list = self.parse(data, settings.data_type, settings.byte_order)
+        self.upate_table_contents(data_list)
         c_data = f"{datetime.now().strftime('%H:%M:%S.%f')[:-3]} {self.req_num} / {self.recv_num} "
         formatted_data = ", ".join([f"{i + 1}:{val}" for i, val in enumerate(data_list)])
         c_data += f"{formatted_data}\r\n"

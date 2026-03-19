@@ -377,8 +377,7 @@ class Ui_MainWindow(object):
 "\n"
 "QToolBar::handle\n"
 "{\n"
-"     spacing: 3px; /* spacing between items in the t"
-                        "ool bar */\n"
+"     spacing: 3px; /* spacing between items in the tool bar */\n"
 "     background: url(:/images/handle.png);\n"
 "}\n"
 "\n"
@@ -426,7 +425,7 @@ class Ui_MainWindow(object):
 "QTabBar::tab:last\n"
 "{\n"
 " "
-                        "   margin-right: 0; /* the last selected tab has nothing to overlap with on the right */\n"
+"   margin-right: 0; /* the last selected tab has nothing to overlap with on the right */\n"
 "    border-top-right-radius: 3px;\n"
 "}\n"
 "\n"
@@ -461,7 +460,7 @@ class Ui_MainWindow(object):
 "    border-top-right-radius: 3px;\n"
 "    background-color: QLinearGradient(x1:0, y1:0, x2:0, y2:1, stop:1 #212121, stop:0.4 #343434, stop:0.2 #343434, stop:0.1 #ffaa00);\n"
 ""
-                        "}\n"
+"}\n"
 "\n"
 "QRadioButton::indicator:checked, QRadioButton::indicator:unchecked{\n"
 "    color: #b1b1b1;\n"
@@ -507,8 +506,7 @@ class Ui_MainWindow(object):
 "QCheckBox::indicator:disabled, QRadioButton::indicator:disabled\n"
 "{\n"
 "    border: 1px solid #444;\n"
-""
-                        "}")
+"}")
         MainWindow.setAnimated(False)
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
