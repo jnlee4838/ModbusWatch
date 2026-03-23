@@ -61,4 +61,4 @@ the above command will make it a single executable file with icon. if you want t
 
 It's a simple demonstation of ESP32 + KSZ8863 + Modbus TCP Slave (TCP Server) + SHT40.
 
-[ESP32 + KSZ8863RLL + SH4x Modbus TCP Slave Demo](https://github.com/jnlee4838/ss_modbus_tcp_sht4x/readme)
+[ESP32 + KSZ8863RLL + SH4x Modbus TCP Slave Demo](https://github.com/jnlee4838/ss_modbus_tcp_sht4x)
